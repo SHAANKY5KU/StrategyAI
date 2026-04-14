@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     // Select the model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 
     let systemBase = "SYSTEM PROMPT: You are a senior business strategy consultant. IMPORTANT: Provide concise, resourceful answers broken into readable blocks.";
     if (workflowTitle) {
