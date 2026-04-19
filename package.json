@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.0",
-    "@prisma/client": "^6.0.0",
+    "@supabase/supabase-js": "^2.103.3",
     "html2pdf.js": "^0.14.0",
     "next": "^14.2.35",
     "react": "^18",
@@ -21,7 +21,6 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "prisma": "^6.0.0",
     "typescript": "^5"
   }
 }

@@ -1,23 +1,25 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await prisma.chatSession.findUnique({
-      where: { id: params.id },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' }
-        },
-        todos: {
-          orderBy: { createdAt: 'asc' }
-        }
-      }
-    });
+    const { data: session, error } = await supabase
+      .from('ChatSession')
+      .select('*, messages:ChatMessage(*), todos:TodoItem(*)')
+      .eq('id', params.id)
+      .single();
 
-    if (!session) {
+    if (error || !session) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    // Sort related messages and todos ascending by createdAt to match Prisma behavior
+    if (session.messages) {
+      session.messages.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    }
+    if (session.todos) {
+      session.todos.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     }
 
     return NextResponse.json({ session });

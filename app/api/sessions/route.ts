@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
-    const sessions = await prisma.chatSession.findMany({
-      orderBy: { updatedAt: 'desc' },
-      take: 20
-    });
+    const { data: sessions, error } = await supabase
+      .from('ChatSession')
+      .select('*')
+      .order('updatedAt', { ascending: false })
+      .limit(20);
+
+    if (error) throw error;
+    
     return NextResponse.json({ sessions });
   } catch (error: any) {
     console.error("Error fetching sessions:", error);

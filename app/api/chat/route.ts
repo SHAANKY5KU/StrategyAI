@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 // Initialize the Google Generative AI with API Key from environment variables.
@@ -16,18 +16,24 @@ export async function POST(req: Request) {
 
     let chatSessionId = sessionId;
     if (!chatSessionId) {
-      const newSession = await prisma.chatSession.create({ 
-        data: {
+      const { data: newSession, error: createError } = await supabase
+        .from('ChatSession')
+        .insert({
           title: workflowTitle || 'General Strategy Session',
           category: workflowTitle ? 'Workflow' : 'General'
-        } 
-      });
+        })
+        .select()
+        .single();
+        
+      if (createError) throw createError;
       chatSessionId = newSession.id;
     } else if (workflowTitle) {
-      await prisma.chatSession.update({
-        where: { id: chatSessionId },
-        data: { title: workflowTitle }
-      });
+      const { error: updateError } = await supabase
+        .from('ChatSession')
+        .update({ title: workflowTitle })
+        .eq('id', chatSessionId);
+        
+      if (updateError) throw updateError;
     }
 
     const compiledUserMessage = fileContext 
@@ -35,13 +41,15 @@ export async function POST(req: Request) {
       : message;
 
     // Persist user's message
-    await prisma.chatMessage.create({
-      data: {
+    const { error: msgErr1 } = await supabase
+      .from('ChatMessage')
+      .insert({
         sessionId: chatSessionId,
         role: 'user',
         content: compiledUserMessage
-      }
-    });
+      });
+      
+    if (msgErr1) throw msgErr1;
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ 
@@ -78,13 +86,15 @@ export async function POST(req: Request) {
     const response = await result.response;
     const text = response.text();
 
-    await prisma.chatMessage.create({
-      data: {
+    const { error: msgErr2 } = await supabase
+      .from('ChatMessage')
+      .insert({
         sessionId: chatSessionId,
         role: 'assistant',
         content: text
-      }
-    });
+      });
+      
+    if (msgErr2) throw msgErr2;
 
     return NextResponse.json({ reply: text, sessionId: chatSessionId, newTodos: [] });
 
