@@ -19,6 +19,7 @@ export async function POST(req: Request) {
       const { data: newSession, error: createError } = await supabase
         .from('ChatSession')
         .insert({
+          id: crypto.randomUUID(),
           title: workflowTitle || 'General Strategy Session',
           category: workflowTitle ? 'Workflow' : 'General'
         })
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
     const { error: msgErr1 } = await supabase
       .from('ChatMessage')
       .insert({
+        id: crypto.randomUUID(),
         sessionId: chatSessionId,
         role: 'user',
         content: compiledUserMessage
@@ -89,6 +91,7 @@ export async function POST(req: Request) {
     const { error: msgErr2 } = await supabase
       .from('ChatMessage')
       .insert({
+        id: crypto.randomUUID(),
         sessionId: chatSessionId,
         role: 'assistant',
         content: text
